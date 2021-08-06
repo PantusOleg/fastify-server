@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  userName       String   @unique
+  avatar         String?
+  fullName       String
+  isOnline       Boolean  @default(false)
+  about          String
+  sports         String[]
+  password       String
+  lastSeen       DateTime @default(now())
+  followersCount Int      @default(0)
+
+  createdEvents Event[]
+  joinedEvents  EventMember[]
+}
+
+model Session {
+  token     String
+  userId    Int
+  expiresAt DateTime
+  sessionId Int      @id @default(autoincrement())
+}
+
+model NotificationToken {
+  id            Int    @id @default(autoincrement())
+  userId        Int
+  expoPushToken String
+}
+
+model Event {
+  id              Int           @id @default(autoincrement())
+  creatorId       Int
+  creator         User          @relation(fields: [creatorId], references: [id])
+  title           String
+  about           String
+  sports          String[]
+  photo           String
+  video           String?
+  date            DateTime
+  private         Boolean       @default(false)
+  likesCount      Int           @default(0)
+  membersCount    Int           @default(0)
+  commentsCount   Int           @default(0)
+  maxMembersCount Int           @default(100)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  members         EventMember[]
+  location        Location?
+}
+
+model Location {
+  id        Int     @id @default(autoincrement())
+  latitude  Float
+  longitude Float
+  info      String?
+  eventId   Int     @unique
+  event     Event   @relation(fields: [eventId], references: [id])
+}
+
+model EventMember {
+  userId  Int
+  eventId Int
+  event   Event @relation(fields: [eventId], references: [id])
+  user    User  @relation(fields: [userId], references: [id])
+
+  @@id([eventId, userId])
+}
